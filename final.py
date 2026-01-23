@@ -1,16 +1,3 @@
-# -----------------------------------------------------------------------------------------
-# PHASE 5: BINARY PROTOCOL IMPLEMENTATION (LATENCY < 40ms)
-# -----------------------------------------------------------------------------------------
-# ARCHITECT: Harsh Kamlesh Chhajed
-# DATE: 2026-01-12
-# -----------------------------------------------------------------------------------------
-# CHANGE LOG:
-# 1. IMU READER: Switched from ASCII CSV to Binary Protocol (0xAA Header).
-# 2. SYNC: Implemented "Self-Healing" byte alignment (Header Search).
-# 3. UNPACKING: Using 'struct' for zero-overhead float extraction.
-# 4. TUNING: POS_FILTER_BETA set to 0.5 for tighter tracking.
-# -----------------------------------------------------------------------------------------
-
 import pyrealsense2 as rs
 import numpy as np
 import cv2
