@@ -1,21 +1,3 @@
-# -----------------------------------------------------------------------------------------
-# PHASE 3: STANDALONE MODE & UI REFINEMENT
-# -----------------------------------------------------------------------------------------
-# ARCHITECT: Harsh Kamlesh Chhajed
-# DATE: 2026-01-03
-# -----------------------------------------------------------------------------------------
-# CHANGE LOG:
-# 1. WEBSOCKET REMOVAL: The system is now fully offline/local.
-#    - Removed AsyncWebSocketServer, asyncio, websockets.
-#    - Removed "Ghost Robot" feedback loop.
-# 2. UI CLARITY: "End" point is now conditional.
-#    - It is HIDDEN until the user leaves Start AND hits Checkpoint 1.
-#    - Prevents visual overlap on closed-loop shapes (Square, Circle).
-# -----------------------------------------------------------------------------------------
-# GPU ACCELERATION (RTX 4060):
-# - CUDA Pre-processing remains active.
-# -----------------------------------------------------------------------------------------
-
 import pyrealsense2 as rs
 import numpy as np
 import cv2
