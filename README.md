@@ -133,7 +133,7 @@ The installation of the repository can be done using the command prompt as follo
 4. **Run your Scripts**
    ```bash
    git clone https://github.com/cake-lab/AR-CV.git AR-CV
-   cd "~/AR-CV"
+   cd ~/AR-CV
    python final.py # To run the CV+IMU Setup
    
    # Optional 
@@ -148,7 +148,7 @@ Run the final.py in your terminal
 
 ```bash
 source ~/venv/bin/activate # or simply run sr
-cd "~/Desktop/Cake Lab/CV"
+cd ~/Ar-CV
    python final.py # To run the CV+IMU Setup
 ```
 
