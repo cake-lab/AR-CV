@@ -1,5 +1,5 @@
 
-# Teleoperation using a CV Integrated System (ROS 2 Humble)
+# Teleoperation using a CV+IMU Integrated System (ROS 2 Humble)
 
 This repository contains a single ROS 2 package providing a vision-based teleoperation pipeline for the PiPER Arm.
 
@@ -17,7 +17,7 @@ These CV codes are for the teleoperation and movement of the PiPER Arm using the
     ```
   * Python Virtual Environment
   * Python 3.10
-  * CV2 with CUDA
+  * CV2 with CUDA - Check Installation at: 
 
 ## Installation
 The installation of the repository can be done using the command prompt as follows:
