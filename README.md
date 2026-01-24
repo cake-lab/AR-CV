@@ -17,7 +17,7 @@ These CV codes are for the teleoperation and movement of the PiPER Arm using the
     ```
   * Python Virtual Environment
   * Python 3.10
-  * CV2 with CUDA - Check Installation at: 
+  * CV2 with CUDA11.6 - Check Installation at: 
 
 ## Installation
 The installation of the repository can be done using the command prompt as follows:
