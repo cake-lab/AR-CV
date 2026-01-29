@@ -194,8 +194,21 @@ Run the check:
 ```bash
 python libcheck.py
 ```
- 
-Run the application:  
+
+**Running the CV+IMU Setup**
+Run the final.py in your terminal  
+
 ```bash
-python final.py
-```  
+source ~/venv/bin/activate # or simply run sr
+cd ~/Ar-CV
+   python final.py # To run the CV+IMU Setup
+```
+| Keys |	Purpose                                          |
+|----- |-------------------------------------------------- |
+| 1-5  |	Render Shapes                                    |
+| Q    |	Killing Terminal                                 |
+| W    |	Changing Tracking Mode                           |
+| H    |	Changing Hand (to select Right(default) or Left) |
+| F    |	Switching between filters (Euro and EMA)         |  
+
+Feel free to open issues or submit pull requests for improvements!
