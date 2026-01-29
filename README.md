@@ -1,165 +1,201 @@
+**AR-CV: Vision Teleoperation System (CUDA Accelerated)**  
 
-# Teleoperation using a CV+IMU Integrated System (ROS 2 Humble)
+This repository contains a high-performance, GPU-accelerated teleoperation pipeline for the PiPER Arm using Intel RealSense and OpenCV.  
+This guide builds a local virtual environment with:  
+- OpenCV 4.x (Compiled from source with CUDA & GTK support)  
+- Intel RealSense (Compiled with RSUSB backend for kernel stability)  
+- PyTorch 2.x (GPU accelerated)  
 
-This repository contains a single ROS 2 package providing a vision-based teleoperation pipeline for the PiPER Arm.
+**Prerequisites**
+* **OS**: Ubuntu 22.04 LTS  
+* **GPU**: NVIDIA GPU (RTX 20-series or newer recommended)  
+* **Drivers**: NVIDIA Driver 535+ (Check with nvidia-smi)  
+* **CUDA**: Version 11.8 or newer installed on system.  
 
-## Overview
+**Critical: Choose Your Architecture**  
+Before compiling OpenCV (Phase 3), you must know your GPU's Compute Capability. Use this table:  
 
-These CV codes are for the teleoperation and movement of the PiPER Arm using the CV+IMU Setup:
 
-## Prerequisites
-
-  * Ubuntu 22.04 LTS
-  * ROS 2 Humble Hawksbill
-    ```bash
-    sudo apt update
-    sudo apt install ros-humble-desktop
-    ```
-  * Python Virtual Environment
-  * Python 3.10
-  * CV2 with CUDA11.6
-
-## Installation
-The installation of the repository can be done using the command prompt as follows:
-
-1. **Open your Python Virtual Environment (in our case venv) and run the following commands**
-   ```bash
-   echo "alias sr='source venv/bin/activate'" >> ~/.bashrc
-   source ~/venv/bin/activate # or simply run sr
-   ```
-
-   ```bash
-   sudo apt update
-   sudo apt install -y git cmake build-essential libusb-1.0-0-dev \ 
-      pkg-config libgtk-3-dev libglfw3-dev libgl1-mesa-dev libglu1-mesa-dev \ 
-      python3.10 python3.10-venv python3.10-dev
-   ```
-   ```bash
-   pip install --upgrade pip setuptools wheel
-   pip install "numpy<2.0"
-   ```
-   ```bash
-   pip pip show numpy # To check if the numpy version is < 2.0
-   ```
-
-2. **Compile PyRealSense 2.50.0 from Source**
-   ```bash
-   cd ~
-   git clone https://github.com/IntelRealSense/librealsense.git
-   cd librealsense
-   git checkout v2.50.0 
-   ```
-  **Build the Python Environment**
-   ```bash
-   mkdir build && cd build
-
-   cmake .. \
-   -DCMAKE_BUILD_TYPE=Release \
-   -DBUILD_PYTHON_BINDINGS=bool:true \
-   -DPYTHON_EXECUTABLE=$(which python3) \
-   -DBUILD_EXAMPLES=false \
-   -DBUILD_GRAPHICAL_EXAMPLES=false
-   ```
-   **Compile the Python Environement**
-   ```bash
-   make -j$(nproc)
-   ``` 
-   **Install the PyRealSense into your virtual environment**
-   ```bash
-   find . -name "pyrealsense2*.so" # Locate the compiled .so file
-   cp ./wrappers/python/pyrealsense2*.so ~/venv/lib/python3.10/site-packages/ # Copy it to your venv (Adjust the path if your find command output differs)
-   ```
-   * Test the PyRealSense driver in your virtual environment (venv)
-   ```bash
-   python -c "import pyrealsense2 as rs; print(f'RealSense Version: {rs.__version__}')"
-   ```
-   **Install PyTorch and other Dependencies**
-   ```bash
-   pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 --extra-index-url https://download.pytorch.org/whl/cu116 # PyTorch for CUDA 11.6
-   pip install scipy pyserial mediapipe websockets
-   ```
-
-3. **Compile OpenCV and CUDA**
-  **Configure the CMake Environment**
-   ```bash
-   cd ~/opencv/build
-   rm -rf *
-
-   cmake -D CMAKE_BUILD_TYPE=RELEASE \
-   -D CMAKE_INSTALL_PREFIX=$(python3.10 -c "import sys; print(sys.prefix)") \
-   -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
-   -D WITH_CUDA=ON \
-   -D WITH_CUDNN=OFF \
-   -D OPENCV_DNN_CUDA=OFF \
-   -D CUDA_ARCH_BIN=7.5 \
-   -D WITH_CUBLAS=1 \
-   -D ENABLE_FAST_MATH=1 \
-   -D WITH_IMAGEIO=ON \
-   -D BUILD_opencv_python3=ON \
-   -D PYTHON3_EXECUTABLE=$(which python3.10) \
-   -D PYTHON3_INCLUDE_DIR=$(python3.10 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
-   -D PYTHON3_PACKAGES_PATH=$(python3.10 -c "import site; print(site.getsitepackages()[0])") \
-   -D BUILD_EXAMPLES=OFF \
-   -D BUILD_TESTS=OFF \
-   ..
-   ```
-   **Compile the Python Environement**
-   ```bash
-   make -j$(nproc)
-   ``` 
-   **Compile the Python Environement**
-   ```bash
-   make install
-   ``` 
-
-3. **Check if dependencies are installed (recommended)**
-   ```bash
-   source ~/venv/bin/activate # or simply run sr 
-   
-   #Add CV2 to venv
-   cd ~/venv/lib/python3.10/site-packages/cv2/python-3.10
-   mv cv2.cpython-310-x86_64-linux-gnu.so ../../
-   
-   # Verify PyRealSense presence
-   python -c "import pyrealsense2 as rs; print('SUCCESS: RealSense found')"
-   '''
-   * If PyRealSense is not detected, run the below commands again:
-   ```bash
-   cd ~/librealsense/build
-   find . -name "pyrealsense2*.so"
-   cp ./wrappers/python/pyrealsense2*.so ~/venv/lib/python3.10/site-packages/
-   ``` 
-
-4. **Run your Scripts**
-   ```bash
-   git clone https://github.com/cake-lab/AR-CV.git AR-CV
-   cd ~/AR-CV
-   python final.py # To run the CV+IMU Setup
-   
-   # Optional 
-   # aruco2.py - used to provide user feedback for the ARCore App
-   # only use for visual check of the shape tracing not needed for running the CV+IMU Setup 
-   python aruco2.py 
-   ``` 
-
-## Running the CV+IMU Setup
-
-Run the final.py in your terminal
-
+| GPU Series                       | Architecture Flag (CUDA_ARCH_BIN) |  
+|--------------------------------- |---------------------------------- |  
+| RTX 40-series (4060, 4070, 4090) | 8.9                               |  
+| RTX 30-series (3060, 3070, 3080) | 8.6                               |  
+| RTX 20-series (2060, 2070, 2080) | 7.5                               |  
+| GTX 10-series (1060, 1070, 1080) | 6.1                               |  
+  
+**Phase 1: System Prep & Skeleton**  
+We start by cleaning the system and setting up the project structure.  
+  
+Install Build Tools (Use aptitude to resolve dependency conflicts automatically)  
 ```bash
-source ~/venv/bin/activate # or simply run sr
-cd ~/Ar-CV
-   python final.py # To run the CV+IMU Setup
+# [SYSTEM TERMINAL]
+sudo apt update
+sudo apt install aptitude -y
+sudo aptitude install git cmake build-essential libusb-1.0-0-dev \
+   pkg-config libgtk-3-dev libglfw3-dev libgl1-mesa-dev libglu1-mesa-dev \
+   python3.10 python3.10-venv python3.10-dev libssl-dev
 ```
-
-| Keys   | Purpose                                          |
-| :----- | :----------------------------------------------- |
-| `1-5`  | Render Shapes                                    |
-| `Q`    | Killing Terminal                                 |
-| `W`    | Changing Tracking Mode                           |
-| `H`    | Changing Hand (to select Right(default) or Left) |
-| `F`    | Switching between filters (Euro and EMA)         |
-
-
-Feel free to open issues or submit pull requests for improvements\!
-
+  
+Clone & Create Venv  
+```bash
+# [SYSTEM TERMINAL]
+cd ~
+git clone [https://github.com/cake-lab/AR-CV.git](https://github.com/cake-lab/AR-CV.git) AR-CV
+cd AR-CV
+# Create virtual environment LOCALLY inside the project
+python3 -m venv venv
+# Activate and update base tools
+source venv/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install "numpy<2.0" # Critical: Pin NumPy to 1.x for OpenCV compatibility
+```
+ 
+**Phase 2: Compile RealSense (RSUSB Backend)**  
+We compile librealsense from source to force the RSUSB backend, which fixes "No Device Connected" errors on modern Linux kernels.  
+  
+Get Source & Permissions  
+```bash
+# [SYSTEM TERMINAL] - Do not run in venv
+deactivate 2>/dev/null
+cd ~
+git clone [https://github.com/IntelRealSense/librealsense.git](https://github.com/IntelRealSense/librealsense.git)
+cd librealsense
+git checkout v2.50.0
+# Install permissions (requires sudo)
+sudo ./scripts/setup_udev_rules.sh
+# ACTION: Unplug and Replug your camera now!
+```
+   
+Build & Install  
+```bash
+# [SYSTEM TERMINAL]
+mkdir build && cd build
+cmake .. \
+-DCMAKE_BUILD_TYPE=Release \
+-DBUILD_PYTHON_BINDINGS=bool:true \
+-DPYTHON_EXECUTABLE=$(which python3) \
+-DBUILD_EXAMPLES=false \
+-DBUILD_GRAPHICAL_EXAMPLES=false \
+-DFORCE_RSUSB_BACKEND=true
+make -j$(nproc)
+sudo make install
+sudo ldconfig
+```
+ 
+Link to Project Venv  
+```bash
+# [SYSTEM TERMINAL]
+# Copy the compiled library into our local venv
+cp ~/librealsense/build/wrappers/python/pyrealsense2*.so ~/AR-CV/venv/lib/python3.10/site-packages/
+# Rename it so Python can import it easily
+mv ~/AR-CV/venv/lib/python3.10/site-packages/pyrealsense2*.so ~/AR-CV/venv/lib/python3.10/site-packages/pyrealsense2.so
+```
+   
+**Phase 3: Compile OpenCV (CUDA + GTK)**  
+This builds a custom OpenCV 4.x with NVIDIA CUDA acceleration and GTK (GUI) support.  
+  
+Download Source  
+```bash
+# [SYSTEM TERMINAL]
+cd ~
+git clone [https://github.com/opencv/opencv.git](https://github.com/opencv/opencv.git)
+git clone [https://github.com/opencv/opencv_contrib.git](https://github.com/opencv/opencv_contrib.git)
+```
+ 
+Configure CMake  
+**CRITICAL**: Update CUDA_ARCH_BIN below to match your GPU (See table in Prerequisites).  
+```bash
+# [IN VENV] - We MUST be inside venv to link Python correctly
+cd ~/AR-CV
+source venv/bin/activate
+cd ~/opencv
+mkdir -p build && cd build
+rm -rf * # Clean start
+cmake -D CMAKE_BUILD_TYPE=RELEASE \
+-D CMAKE_INSTALL_PREFIX=/usr/local \
+-D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
+-D WITH_CUDA=ON \
+-D WITH_CUDNN=OFF \
+-D OPENCV_DNN_CUDA=OFF \
+-D CUDA_ARCH_BIN=8.9 \
+-D WITH_CUBLAS=1 \
+-D ENABLE_FAST_MATH=1 \
+-D WITH_IMAGEIO=ON \
+-D WITH_GTK=ON \
+-D BUILD_JAVA=OFF \
+-D BUILD_opencv_java_bindings_generator=OFF \
+-D BUILD_opencv_python3=ON \
+-D OPENCV_PYTHON3_INSTALL_PATH=~/AR-CV/venv/lib/python3.10/site-packages \
+-D PYTHON3_EXECUTABLE=$(which python3) \
+-D BUILD_EXAMPLES=OFF \
+-D BUILD_TESTS=OFF \
+..
+```
+   
+Compile & Install  
+```bash
+# [IN VENV]
+make -j$(nproc)
+sudo make install
+sudo ldconfig
+```   
+  
+Final Cleanup (Linking)  
+```bash
+# [IN VENV]
+# Manually copy the file to ensure it's in the right place
+cp ~/opencv/build/lib/python3/cv2*.so ~/AR-CV/venv/lib/python3.10/site-packages/
+# Rename for import
+cd ~/AR-CV/venv/lib/python3.10/site-packages/
+rm -f cv2.so # Remove any CPU-only fallback if it exists
+mv cv2.cpython-310-x86_64-linux-gnu.so cv2.so
+cd ~/AR-CV # Return home
+```
+   
+**Phase 4: Final Dependencies**
+Install the remaining AI logic libraries. We use PyTorch with CUDA 11.8 support (which is compatible with CUDA 12 drivers).  
+```bash
+# [IN VENV]
+source venv/bin/activate
+# 1. Install PyTorch (Stable GPU Version)
+pip install torch==2.0.1 torchvision==0.15.2 --index-url [https://download.pytorch.org/whl/cu118](https://download.pytorch.org/whl/cu118)
+# 2. Install Logic Libs (Pinned for stability)
+# Note: We pin numpy<2.0 to prevent conflicts with OpenCV/RealSense
+pip install "numpy<2.0" scipy pyserial websockets "mediapipe==0.10.14"
+# 3. Clean up any CPU-OpenCV that MediaPipe might have auto-installed
+pip uninstall -y opencv-python opencv-contrib-python opencv-python-headless
+```   
+  
+**Phase 5: Verification**  
+Create a file named libcheck.py to verify your GPU stack is active.  
+```bash
+import torch
+import cv2
+import pyrealsense2 as rs
+print("--- Library Check ---")
+print(f"PyTorch: {torch.__version__}")
+print(f"OpenCV:  {cv2.__version__}")
+print(f"RealSense: {rs.__version__}")
+if torch.cuda.is_available():
+    print(f"SUCCESS: PyTorch GPU -> {torch.cuda.get_device_name(0)}")
+else:
+    print("FAIL: PyTorch cannot see GPU")
+try:
+    count = cv2.cuda.getCudaEnabledDeviceCount()
+    if count > 0:
+        print(f"SUCCESS: OpenCV GPU -> Found {count} device(s)")
+    else:
+        print("FAIL: OpenCV compiled without CUDA")
+except:
+    print("FAIL: cv2.cuda module missing")
+```  
+   
+Run the check:  
+```bash
+python libcheck.py
+```
+ 
+Run the application:  
+```bash
+python final.py
+```  
